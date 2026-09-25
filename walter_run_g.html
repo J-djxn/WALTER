@@ -51,23 +51,28 @@ html,body{
   border-radius:4px;transition:width 0.15s ease-out;
 }
 
+@keyframes coinPop { 0% {transform: scale(1);} 50% {transform: scale(1.3);} 100% {transform: scale(1);} }
+.pop-anim { display: inline-block; animation: coinPop 0.2s ease-out; }
+
 #hud{
-  position:absolute;z-index:20;top:12px;left:12px;
-  background:#17101dee;border:2px solid #87513e;border-radius:8px;
-  padding:12px 14px;min-width:190px;
-  display: flex; flex-direction: column; gap: 8px;
+  position:absolute;z-index:20;top:12px;left:12px; right:12px;
+  background: rgba(22, 12, 36, 0.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 2px solid #ffaa00; border-radius: 12px; padding: 8px 12px;
+  display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   font-family: 'Press Start 2P', monospace;
   pointer-events:none;
 }
 #hud small{
-  display:flex; justify-content: space-between; align-items: center; gap: 12px;
-  font-size: 10px; line-height: 1.4; color: #ffe9b0;
+  display:flex; align-items: center; gap: 6px;
+  font-size: 10px; line-height: 1.4; color: #ffffff; text-shadow: 0 0 5px #ffd700;
   font-family: 'Press Start 2P', monospace;
 }
 #hud small span{ color: #ffb35c; font-family: 'Press Start 2P', monospace; }
-#coinsHud span { color: #ffd76a !important; }
-#speedHud span { color: #6affd7 !important; }
+#coinsHud { color: #ffd700; text-shadow: 0 0 8px #ffaa00; }
+#coinsHud span { color: #ffd700 !important; }
+#speedHud { color: #00f0ff; text-shadow: 0 0 8px #00a8b5; }
+#speedHud span { color: #00f0ff !important; }
 
 #start,#gameOver{
   position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(0,0,0,.70);
@@ -75,43 +80,57 @@ html,body{
 }
 #gameOver{display:none}
 
+@keyframes popIn { 0% { transform: scale(0.7); opacity: 0; } 80% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+
 .card{
-  background:#211323;border:3px solid #c97945;border-radius:14px;
+  background:#160c24;border:3px solid #ffaa00;border-radius:14px;
   padding:20px 22px;text-align:center;max-width:420px;width:92%;
-  box-shadow:0 8px 32px rgba(0,0,0,0.8);
+  box-shadow:0 0 20px rgba(255, 170, 0, 0.25), inset 0 0 15px rgba(0,0,0,0.6);
   max-height: 90vh; overflow-y: auto;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 .card::-webkit-scrollbar { width: 6px; }
-.card::-webkit-scrollbar-thumb { background: #87513e; border-radius: 4px; }
+.card::-webkit-scrollbar-thumb { background: #ffaa00; border-radius: 4px; }
 
 .tab-bar {
-  display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 2px solid #5c2e1a; padding-bottom: 10px;
+  display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 2px solid #ffaa00; padding-bottom: 10px;
 }
 .tab-btn {
-  flex: 1; padding: 8px 4px; background: #17101d; color: #a38173; border: 2px solid #5c2e1a;
-  border-radius: 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; transition: all 0.2s;
+  flex: 1; padding: 8px 4px; border-radius: 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; justify-content: center; gap: 4px;
+  background: #2a1535; border: 2px solid #00f0ff; border-bottom: 6px solid #00a8b5; color: #00f0ff; text-shadow: 1px 1px 0 #000; box-shadow: 0 4px 8px rgba(0,0,0,0.6);
 }
+.tab-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.tab-btn:active { transform: translateY(4px); border-bottom-width: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 .tab-btn.active {
-  background: #713b32; color: #ffe9b0; border-color: #d18a4d; box-shadow: 0 0 8px rgba(209,138,77,0.4);
+  background: #ff8400; color: #fff; border: 2px solid #ffe9b0; border-bottom: 6px solid #b34700; box-shadow: 0 6px 12px rgba(0,0,0,0.6);
 }
 
 .lb-subtabs {
   display: flex; gap: 6px; margin: 10px 0 8px; justify-content: center;
 }
 .lb-subtab-btn {
-  flex: 1; padding: 6px 4px; background: #17101d; color: #a38173; border: 1px solid #5c2e1a;
-  border-radius: 5px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; transition: all 0.2s;
+  flex: 1; padding: 6px 4px; border-radius: 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; transition: all 0.2s;
+  background: #2a1535; border: 2px solid #00f0ff; border-bottom: 4px solid #00a8b5; color: #00f0ff; text-shadow: 1px 1px 0 #000;
 }
+.lb-subtab-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.lb-subtab-btn:active { transform: translateY(2px); border-bottom-width: 2px; }
 .lb-subtab-btn.active {
-  background: #5c2e1a; color: #ffd76a; border-color: #ffb35c; box-shadow: 0 0 6px rgba(255,179,92,0.3);
+  background: #ff8400; color: #fff; border: 2px solid #ffe9b0; border-bottom: 4px solid #b34700;
 }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-.card h1{margin:0 0 8px;color:#ffb35c;font-size:18px;line-height:1.3}
+.card h1{margin:0 0 8px;color:#ffd700;font-size:18px;line-height:1.3; text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 2px 2px 0 #7a3a00;}
 .card p{margin:6px 0 10px;opacity:.9;font-size:10px;line-height:1.5}
+
+@keyframes flashBadge {
+  0% {text-shadow: 0 0 10px #ffd700; color: #ffd700;}
+  50% {text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; color: #00ff00;}
+  100% {text-shadow: 0 0 10px #ffd700; color: #ffd700;}
+}
+#newRecordBadge { animation: flashBadge 1s infinite; }
 
 .controls-guide {
   background: rgba(0,0,0,0.4);
@@ -133,10 +152,11 @@ html,body{
 .wallet-btns { display: flex; gap: 8px; margin-top: 6px; }
 .btn-wallet {
   flex: 1; padding: 8px 4px; font-size: 8px; font-family: 'Press Start 2P', monospace;
-  background: #2a1530; color: #ffe9b0; border: 1px solid #c97945; border-radius: 6px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.2s;
+  background: #2a1535; border: 2px solid #00f0ff; border-bottom: 4px solid #00a8b5; color: #00f0ff; text-shadow: 1px 1px 0 #000;
+  border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s;
 }
-.btn-wallet:hover { background: #3c1e45; border-color: #ffb35c; }
+.btn-wallet:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.btn-wallet:active { transform: translateY(2px); border-bottom-width: 2px; }
 .user-status { font-size: 8px; color: #6affd7; line-height: 1.5; word-break: break-all; margin-bottom: 6px; }
 .user-highscores { margin-top: 6px; font-size: 8px; color: #ffd76a; display: flex; justify-content: space-between; border-top: 1px dashed #3c1e45; padding-top: 6px; }
 
@@ -159,13 +179,25 @@ html,body{
 .btn-group { display: flex; gap: 10px; margin-top: 14px; }
 button{
   font-family: 'Press Start 2P', monospace;
-  padding:10px 16px;background:#713b32;color:#fff0bd;
-  border:2px solid #d18a4d;border-radius:8px;
-  font-size:11px;cursor:pointer; transition: transform 0.1s;
+  padding:10px 16px; background: #ff8400; border: 2px solid #ffe9b0; border-bottom: 6px solid #b34700;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6); color: #fff; text-shadow: 1px 1px 0 #000;
+  border-radius:6px; font-size:11px; cursor:pointer; transition: all 0.1s ease;
 }
-button:hover{background:#8a4a3e; transform: scale(1.02);}
-button.secondary { background: #2a1530; border-color: #87513e; color: #ffe9b0; }
-button.secondary:hover { background: #3a1e42; }
+button:hover{ filter: brightness(1.1); transform: translateY(-2px); }
+button:active { transform: translateY(4px); border-bottom-width: 2px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+
+@keyframes pulseCTA {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+#startBtn { animation: pulseCTA 1.5s infinite; }
+#startBtn:hover { animation: none; filter: brightness(1.1); transform: translateY(-2px); }
+#startBtn:active { transform: translateY(4px); border-bottom-width: 2px; }
+
+button.secondary { background: #2a1535; border: 2px solid #00f0ff; border-bottom: 6px solid #00a8b5; color: #00f0ff; text-shadow: 1px 1px 0 #000; box-shadow: 0 4px 8px rgba(0,0,0,0.6); }
+button.secondary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+button.secondary:active { transform: translateY(4px); border-bottom-width: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 
 #muteBtn{
   position:absolute;z-index:20;bottom:14px;right:14px;
@@ -212,7 +244,7 @@ button.secondary:hover { background: #3a1e42; }
       <div class="tab-bar">
         <button class="tab-btn active" id="tabGameBtn" onclick="switchTab('game')">🎮 Run</button>
         <button class="tab-btn" id="tabLbBtn" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
-        <button class="tab-btn" id="tabProfBtn" style="display:none;" onclick="switchTab('profile')">👤 Profile</button>
+        <button class="tab-btn" id="tabProfBtn" onclick="switchTab('profile')">👤 Profile</button>
       </div>
 
       <div id="tabGame" class="tab-content active">
@@ -768,9 +800,9 @@ function disconnectWallet() {
   document.getElementById('loginBadge').textContent = 'GUEST';
   document.getElementById('loginBadge').style.color = '#a38173';
   
-  // Hide Profile Tab
+  // Ensure Profile Tab remains visible
   const profBtn = document.getElementById('tabProfBtn');
-  if (profBtn) profBtn.style.display = 'none';
+  if (profBtn) profBtn.style.display = '';
   switchTab('game');
 
   showNotice("Wallet disconnected.");
@@ -786,9 +818,9 @@ function setConnectedAccount(account, providerName) {
   document.getElementById('loginBadge').style.color = '#6affd7';
   document.getElementById('userAddressText').textContent = account.length > 16 ? account.substring(0,8) + '...' + account.slice(-6) : account;
   
-  // Show Profile Tab for logged in user
+  // Ensure Profile Tab remains visible
   const profBtn = document.getElementById('tabProfBtn');
-  if (profBtn) profBtn.style.display = 'flex';
+  if (profBtn) profBtn.style.display = '';
 
   fetchLeaderboardPHP(account);
   setupWalletEventListeners();
@@ -1005,6 +1037,34 @@ if (savedProvider === 'METAMASK') {
     return buf;
   }
 
+  function playUIHover() {
+    if (muted || !audioCtx) return;
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(400, t);
+    o.frequency.linearRampToValueAtTime(450, t + 0.05);
+    g.gain.setValueAtTime(0.08, t);
+    g.gain.linearRampToValueAtTime(0.001, t + 0.05);
+    o.connect(g); g.connect(sfxGain);
+    o.start(t); o.stop(t + 0.05);
+  }
+
+  function playUIClick() {
+    if (muted || !audioCtx) return;
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(800, t);
+    o.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
+    g.gain.setValueAtTime(0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    o.connect(g); g.connect(sfxGain);
+    o.start(t); o.stop(t + 0.08);
+  }
+
   function playJump() {
     if (muted || !audioCtx) return;
     const t = audioCtx.currentTime;
@@ -1184,8 +1244,8 @@ if (savedProvider === 'METAMASK') {
     }
     while (nextCoinAt < ahead && coins.length < 8) {
       makeCoin(nextCoinAt, Math.random() > 0.3);
-      if (Math.random() < 0.05) {
-        if (Math.random() < 0.5) makeSpeedBoost(nextCoinAt + 150);
+      if (Math.random() < 0.15) {
+        if (Math.random() < 0.7) makeSpeedBoost(nextCoinAt + 150);
         else makeMysteryBox(nextCoinAt + 150);
       }
       nextCoinAt += 340 + Math.random() * 360;
@@ -1217,6 +1277,7 @@ if (savedProvider === 'METAMASK') {
   }
 
   const particles = [];
+  const rockParticles = [];
   function jump() {
     if (running && y === 0) {
       vy = JUMP; y = 0.1; playJump();
@@ -1305,14 +1366,30 @@ if (savedProvider === 'METAMASK') {
 
     const isInvincible = performance.now() < invincibleEndTime;
 
-    for (const r of rocks) {
+    for (let i = rocks.length - 1; i >= 0; i--) {
+      const r = rocks[i];
       const sx = px + r.x - worldX;
       const l = sx - r.w * 0.38;
       const rr = sx + r.w * 0.38;
       const top = g + r.h * 0.78;
       if (pR > l && pL < rr && pB < top && pT > g + 4) {
         if (y < r.h * 0.58) {
-          if (!isInvincible) { crash(); return; }
+          if (isInvincible || performance.now() < speedBoostEndTime) {
+            rocks.splice(i, 1);
+            for(let j=0; j<15; j++) {
+              rockParticles.push({
+                x: sx,
+                y: top,
+                vx: (Math.random() - 0.5) * 300,
+                vy: -(Math.random() * 200 + 100),
+                rot: Math.random() * Math.PI * 2,
+                vrot: (Math.random() - 0.5) * 0.5,
+                life: 1.0
+              });
+            }
+          } else {
+            crash(); return; 
+          }
         }
       }
     }
@@ -1327,6 +1404,9 @@ if (savedProvider === 'METAMASK') {
         c.taken = true;
         coinCount += 1;
         coinsEl.textContent = coinCount;
+        coinsEl.classList.remove('pop-anim');
+        void coinsEl.offsetWidth;
+        coinsEl.classList.add('pop-anim');
         dist += 15;
         playCoin();
       }
@@ -1341,7 +1421,7 @@ if (savedProvider === 'METAMASK') {
       if (dx < 45 && dy < 50) {
         sb.taken = true;
         speedBoostEndTime = performance.now() + 3000;
-        floatingTexts.push({ text: "SPEED BOOST!", x: px, y: pB - 80, life: 1.0 });
+        floatingTexts.push({ text: "SPEED BOOST!", x: px, y: pB - 80, opacity: 1.0 });
         playCoin();
       }
     }
@@ -1354,18 +1434,13 @@ if (savedProvider === 'METAMASK') {
       const dy = Math.abs((pB + (pT - pB) / 2) - cy);
       if (dx < 45 && dy < 50) {
         mb.taken = true;
-        const r = Math.random();
-        if (r < 0.33) {
-          coinCount += 50;
-          coinsEl.textContent = coinCount;
-          floatingTexts.push({ text: "+50 COINS!", x: px, y: pB - 80, life: 1.0 });
-        } else if (r < 0.66) {
-          invincibleEndTime = performance.now() + 4000;
-          floatingTexts.push({ text: "INVINCIBLE!", x: px, y: pB - 80, life: 1.0 });
-        } else {
-          speedBoostEndTime = performance.now() + 3000;
-          floatingTexts.push({ text: "SPEED BOOST!", x: px, y: pB - 80, life: 1.0 });
-        }
+        const bulk = Math.floor(Math.random() * 6) + 5;
+        coinCount += bulk;
+        coinsEl.textContent = coinCount;
+        coinsEl.classList.remove('pop-anim');
+        void coinsEl.offsetWidth;
+        coinsEl.classList.add('pop-anim');
+        floatingTexts.push({ text: `+${bulk} Coins!`, x: playerCenterX(), y: pB - 30, opacity: 1.0 });
         playCoin();
       }
     }
@@ -1506,6 +1581,32 @@ if (savedProvider === 'METAMASK') {
         ctx.fillRect(p.x, p.y, p.size, p.size);
       }
     }
+    
+    for (let i = rockParticles.length - 1; i >= 0; i--) {
+      let rp = rockParticles[i];
+      rp.vy += GRAVITY * 0.016;
+      rp.x += rp.vx * 0.016;
+      rp.y += rp.vy * 0.016;
+      rp.rot += rp.vrot;
+      rp.life -= 0.02;
+      if (rp.life <= 0) {
+        rockParticles.splice(i, 1);
+      } else {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, rp.life);
+        ctx.translate(rp.x, rp.y);
+        ctx.rotate(rp.rot);
+        ctx.fillStyle = '#6b4c3a';
+        ctx.beginPath();
+        ctx.moveTo(-5, -5);
+        ctx.lineTo(5, -2);
+        ctx.lineTo(3, 5);
+        ctx.lineTo(-4, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
     ctx.globalAlpha = 1.0;
 
     const walterImg = loadedAssets[window.userStats.activeSkin || 'walkingwalter.gif'];
@@ -1517,24 +1618,42 @@ if (savedProvider === 'METAMASK') {
       ctx.save();
       let scaleX = 1.0;
       let scaleY = 1.0;
+      let rot = 0;
 
       if (y > 0) {
-        let stretch = Math.min(0.25, Math.abs(vy) / JUMP * 0.25);
-        scaleX = 1.0 - stretch;
-        scaleY = 1.0 + stretch;
-      } else if (window.landTime && (now - window.landTime) < 150) {
-        scaleX = 1.2;
-        scaleY = 0.8;
+        rot = (vy > 0) ? -0.2 : 0.2;
+      } else {
+        rot = Math.sin(now / 100) * 0.1;
+        scaleX = 1 + Math.sin(now / 80) * 0.05;
+        scaleY = 1 - Math.sin(now / 80) * 0.05;
       }
 
       if (now < speedBoostEndTime) {
-        speedTrail.push({ x: walterX, y: walterY, scaleX, scaleY });
+        ctx.save();
+        ctx.translate(walterX + 50, walterY + 55);
+        ctx.scale(scaleX, scaleY);
+        const pulse = 1 + Math.sin(now / 100) * 0.15;
+        const grad = ctx.createRadialGradient(0, 0, 10, 0, 0, 70 * pulse);
+        grad.addColorStop(0, 'rgba(0, 240, 255, 0.8)');
+        grad.addColorStop(0.5, 'rgba(0, 240, 255, 0.4)');
+        grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 70 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 20;
+
+        speedTrail.push({ x: walterX, y: walterY, scaleX, scaleY, rot });
         if (speedTrail.length > 10) speedTrail.shift();
         for (let i = 0; i < speedTrail.length; i += 2) {
           let t = speedTrail[i];
           ctx.save();
           ctx.globalAlpha = 0.3 * (i / speedTrail.length);
           ctx.translate(t.x + 50, t.y + 110);
+          ctx.rotate(t.rot || 0);
           ctx.scale(t.scaleX, t.scaleY);
           ctx.translate(-(t.x + 50), -(t.y + 110));
           ctx.drawImage(walterImg, t.x, t.y, 100, 110);
@@ -1550,6 +1669,7 @@ if (savedProvider === 'METAMASK') {
       }
 
       ctx.translate(walterX + 50, walterY + 110);
+      ctx.rotate(rot);
       ctx.scale(scaleX, scaleY);
       ctx.translate(-(walterX + 50), -(walterY + 110));
       
@@ -1560,16 +1680,25 @@ if (savedProvider === 'METAMASK') {
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
       let ft = floatingTexts[i];
       ft.y -= 1.5;
-      ft.life -= 0.02;
-      if (ft.life <= 0) {
-        floatingTexts.splice(i, 1);
+      if (ft.opacity !== undefined) {
+        ft.opacity -= 0.02;
+        if (ft.opacity <= 0) {
+          floatingTexts.splice(i, 1);
+          continue;
+        }
+        ctx.globalAlpha = Math.max(0, ft.opacity);
       } else {
+        ft.life -= 0.02;
+        if (ft.life <= 0) {
+          floatingTexts.splice(i, 1);
+          continue;
+        }
         ctx.globalAlpha = Math.max(0, ft.life);
-        ctx.font = '12px "Press Start 2P", sans-serif';
-        ctx.fillStyle = '#6affd7';
-        ctx.textAlign = 'center';
-        ctx.fillText(ft.text, ft.x, ft.y);
       }
+      ctx.font = '12px "Press Start 2P", sans-serif';
+      ctx.fillStyle = '#6affd7';
+      ctx.textAlign = 'center';
+      ctx.fillText(ft.text, ft.x, ft.y);
     }
     ctx.globalAlpha = 1.0;
     ctx.textAlign = 'left';
@@ -1618,6 +1747,11 @@ if (savedProvider === 'METAMASK') {
     if (e.target.closest('button') || e.target.closest('.card')) return;
     if (!running) return;
     jump();
+  });
+
+  document.querySelectorAll('button, .tab-btn, .lb-subtab-btn, .btn-wallet').forEach(btn => {
+    btn.addEventListener('mouseenter', playUIHover);
+    btn.addEventListener('pointerdown', playUIClick);
   });
 
   preloadAssets(() => {
