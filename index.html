@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<link rel="icon" type="image/gif" href="coin.gif">
+<link rel="icon" type="image/png" href="coin_static.png">
 <title>Walter Run</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -171,9 +171,14 @@ html,body{
   border:3px solid #e8a84a;box-shadow:0 0 0 2px #5c2e1a,0 4px 12px rgba(0,0,0,.45);
   overflow:hidden;background:#2a1530;
 }
+@keyframes spinLogo {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
 .logo-wrap img{
   width:100%;height:100%;object-fit:cover;display:block;
   image-rendering:pixelated;
+  animation: spinLogo 2s linear infinite;
 }
 
 .btn-group { display: flex; gap: 10px; margin-top: 14px; }
@@ -221,7 +226,7 @@ button.secondary:active { transform: translateY(4px); border-bottom-width: 2px; 
 
   <div id="preloader">
     <div class="card" style="max-width:340px;">
-      <div class="logo-wrap"><img src="coin.gif" alt="Loading"></div>
+      <div class="logo-wrap"><img src="coin_static.png" alt="Loading"></div>
       <h1 style="font-size:13px; margin-bottom:12px; color:#ffb35c;">LOADING ASSETS</h1>
       <div class="loader-bar-bg">
         <div id="loaderFill"></div>
@@ -248,7 +253,7 @@ button.secondary:active { transform: translateY(4px); border-bottom-width: 2px; 
       </div>
 
       <div id="tabGame" class="tab-content active">
-        <div class="logo-wrap"><img src="coin.gif" alt="Walter"></div>
+        <div class="logo-wrap"><img src="coin_static.png" alt="Walter"></div>
         <h1>Walter Run</h1>
         <p>Jump over rocks, grab coins!</p>
         
@@ -365,7 +370,7 @@ button.secondary:active { transform: translateY(4px); border-bottom-width: 2px; 
 
   <div id="gameOver">
     <div class="card">
-      <div class="logo-wrap"><img src="coin.gif" alt="Walter"></div>
+      <div class="logo-wrap"><img src="coin_static.png" alt="Walter"></div>
       <h1 style="color:#ff6b6b;">Game Over</h1>
       <p style="margin:12px 0; line-height:1.8;">
         Distance: <span id="finalScore" style="color:#ffb35c;">0</span> m<br>
@@ -794,6 +799,7 @@ function disconnectWallet() {
   window.connectedProvider = null;
   window.userStats = { bestDist: 0, bestCoins: 0, totalDist: 0, totalCoins: 0, name: '', races: [], unlockedSkins: ['walkingwalter.gif'], activeSkin: 'walkingwalter.gif' };
   localStorage.removeItem('walter_wallet_provider');
+  localStorage.removeItem('walter_active_wallet');
   
   document.getElementById('walletLoggedOut').style.display = 'block';
   document.getElementById('walletLoggedIn').style.display = 'none';
@@ -812,6 +818,7 @@ function setConnectedAccount(account, providerName) {
   window.connectedAccount = account;
   window.connectedProvider = providerName;
   localStorage.setItem('walter_wallet_provider', providerName);
+  localStorage.setItem('walter_active_wallet', account);
   document.getElementById('walletLoggedOut').style.display = 'none';
   document.getElementById('walletLoggedIn').style.display = 'block';
   document.getElementById('loginBadge').textContent = providerName;
@@ -822,9 +829,17 @@ function setConnectedAccount(account, providerName) {
   const profBtn = document.getElementById('tabProfBtn');
   if (profBtn) profBtn.style.display = '';
 
-  fetchLeaderboardPHP(account);
+  // fetchLeaderboardPHP(account);
   setupWalletEventListeners();
   showNotice(`Connected: ${providerName}`);
+}
+
+function autoLoginWallet() {
+  const savedAccount = localStorage.getItem('walter_active_wallet');
+  const savedProvider = localStorage.getItem('walter_wallet_provider');
+  if (savedAccount && savedProvider) {
+    setConnectedAccount(savedAccount, savedProvider);
+  }
 }
 
 function setupWalletEventListeners() {
@@ -886,7 +901,6 @@ if (savedProvider === 'METAMASK') {
     'walter_astro.png',
     'walter_specops.gif',
     'walter_desert.png',
-    'coin.gif',
     'coin_static.png',
     'terrain.png',
     'rock_1.png',
@@ -1621,11 +1635,20 @@ if (savedProvider === 'METAMASK') {
       let rot = 0;
 
       if (y > 0) {
-        rot = (vy > 0) ? -0.2 : 0.2;
+        rot = Math.max(-0.4, Math.min(0.4, -vy * 0.0006));
       } else {
-        rot = Math.sin(now / 100) * 0.1;
-        scaleX = 1 + Math.sin(now / 80) * 0.05;
-        scaleY = 1 - Math.sin(now / 80) * 0.05;
+        rot = Math.sin(now / 150) * 0.08;
+        scaleX = 1 + Math.sin(now / 150) * 0.06;
+        scaleY = 1 - Math.sin(now / 150) * 0.06;
+        
+        if (window.landTime) {
+          const timeSinceLand = now - window.landTime;
+          if (timeSinceLand < 150) {
+            const ease = 1 - (timeSinceLand / 150);
+            scaleX += 0.3 * ease;
+            scaleY -= 0.3 * ease;
+          }
+        }
       }
 
       if (now < speedBoostEndTime) {
@@ -1646,21 +1669,19 @@ if (savedProvider === 'METAMASK') {
         ctx.shadowColor = '#00f0ff';
         ctx.shadowBlur = 20;
 
-        speedTrail.push({ x: walterX, y: walterY, scaleX, scaleY, rot });
-        if (speedTrail.length > 10) speedTrail.shift();
-        for (let i = 0; i < speedTrail.length; i += 2) {
-          let t = speedTrail[i];
+        const opacities = [0.3, 0.2, 0.1];
+        const xOffset = 25;
+        for (let i = 0; i < opacities.length; i++) {
           ctx.save();
-          ctx.globalAlpha = 0.3 * (i / speedTrail.length);
-          ctx.translate(t.x + 50, t.y + 110);
-          ctx.rotate(t.rot || 0);
-          ctx.scale(t.scaleX, t.scaleY);
-          ctx.translate(-(t.x + 50), -(t.y + 110));
-          ctx.drawImage(walterImg, t.x, t.y, 100, 110);
+          ctx.globalAlpha = opacities[i];
+          const tx = walterX - (i + 1) * xOffset;
+          ctx.translate(tx + 50, walterY + 110);
+          ctx.rotate(rot);
+          ctx.scale(scaleX, scaleY);
+          ctx.translate(-(tx + 50), -(walterY + 110));
+          ctx.drawImage(walterImg, tx, walterY, 100, 110);
           ctx.restore();
         }
-      } else {
-        if (speedTrail.length > 0) speedTrail.shift();
       }
 
       if (now < invincibleEndTime) {
@@ -1753,6 +1774,8 @@ if (savedProvider === 'METAMASK') {
     btn.addEventListener('mouseenter', playUIHover);
     btn.addEventListener('pointerdown', playUIClick);
   });
+
+  autoLoginWallet();
 
   preloadAssets(() => {
     fetchLeaderboardPHP();
