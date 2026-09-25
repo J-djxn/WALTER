@@ -1,0 +1,1629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" type="image/gif" href="coin.gif">
+<title>Walter Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#17101d;
+  font-family:'Press Start 2P', monospace;
+  color:#ffe9b0;user-select:none;
+  font-size: 11px;
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:none;
+}
+#game{
+  position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;
+  background:linear-gradient(#1a0f22 0%,#2a1535 40%,#17101d 100%);
+  touch-action:none;
+}
+
+#gameCanvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  z-index:1;
+  will-change:transform;
+  transform:translate3d(0,0,0);
+  backface-visibility:hidden;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+}
+
+.card{touch-action:pan-y}
+
+#preloader{
+  position:absolute;inset:0;z-index:50;display:grid;place-items:center;background:#17101d;
+  font-family:'Press Start 2P', monospace;
+}
+.loader-bar-bg{
+  width:100%;height:16px;background:#100b14;border:2px solid #87513e;
+  border-radius:8px;overflow:hidden;padding:2px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.6);
+}
+#loaderFill{
+  width:0%;height:100%;background:linear-gradient(90deg, #ffb35c, #ffd76a);
+  border-radius:4px;transition:width 0.15s ease-out;
+}
+
+#hud{
+  position:absolute;z-index:20;top:12px;left:12px;
+  background:#17101dee;border:2px solid #87513e;border-radius:8px;
+  padding:12px 14px;min-width:190px;
+  display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  font-family: 'Press Start 2P', monospace;
+  pointer-events:none;
+}
+#hud small{
+  display:flex; justify-content: space-between; align-items: center; gap: 12px;
+  font-size: 10px; line-height: 1.4; color: #ffe9b0;
+  font-family: 'Press Start 2P', monospace;
+}
+#hud small span{ color: #ffb35c; font-family: 'Press Start 2P', monospace; }
+#coinsHud span { color: #ffd76a !important; }
+#speedHud span { color: #6affd7 !important; }
+
+#start,#gameOver{
+  position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:rgba(0,0,0,.70);
+  font-family: 'Press Start 2P', monospace;
+}
+#gameOver{display:none}
+
+.card{
+  background:#211323;border:3px solid #c97945;border-radius:14px;
+  padding:20px 22px;text-align:center;max-width:420px;width:92%;
+  box-shadow:0 8px 32px rgba(0,0,0,0.8);
+  max-height: 90vh; overflow-y: auto;
+}
+.card::-webkit-scrollbar { width: 6px; }
+.card::-webkit-scrollbar-thumb { background: #87513e; border-radius: 4px; }
+
+.tab-bar {
+  display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 2px solid #5c2e1a; padding-bottom: 10px;
+}
+.tab-btn {
+  flex: 1; padding: 8px 4px; background: #17101d; color: #a38173; border: 2px solid #5c2e1a;
+  border-radius: 6px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.tab-btn.active {
+  background: #713b32; color: #ffe9b0; border-color: #d18a4d; box-shadow: 0 0 8px rgba(209,138,77,0.4);
+}
+
+.lb-subtabs {
+  display: flex; gap: 6px; margin: 10px 0 8px; justify-content: center;
+}
+.lb-subtab-btn {
+  flex: 1; padding: 6px 4px; background: #17101d; color: #a38173; border: 1px solid #5c2e1a;
+  border-radius: 5px; font-family: 'Press Start 2P', monospace; font-size: 8px; cursor: pointer; transition: all 0.2s;
+}
+.lb-subtab-btn.active {
+  background: #5c2e1a; color: #ffd76a; border-color: #ffb35c; box-shadow: 0 0 6px rgba(255,179,92,0.3);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.card h1{margin:0 0 8px;color:#ffb35c;font-size:18px;line-height:1.3}
+.card p{margin:6px 0 10px;opacity:.9;font-size:10px;line-height:1.5}
+
+.controls-guide {
+  background: rgba(0,0,0,0.4);
+  border: 1px dashed #713b32;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 9px;
+  margin: 12px 0 !important;
+  color: #ffe9b0;
+  line-height: 1.6;
+}
+.controls-guide b { color: #ffb35c; }
+
+.wallet-box {
+  background: #17101d; border: 2px solid #87513e; border-radius: 8px;
+  padding: 10px 12px; margin: 12px 0; text-align: left;
+}
+.wallet-box-title { font-size: 9px; color: #ffb35c; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.wallet-btns { display: flex; gap: 8px; margin-top: 6px; }
+.btn-wallet {
+  flex: 1; padding: 8px 4px; font-size: 8px; font-family: 'Press Start 2P', monospace;
+  background: #2a1530; color: #ffe9b0; border: 1px solid #c97945; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.2s;
+}
+.btn-wallet:hover { background: #3c1e45; border-color: #ffb35c; }
+.user-status { font-size: 8px; color: #6affd7; line-height: 1.5; word-break: break-all; margin-bottom: 6px; }
+.user-highscores { margin-top: 6px; font-size: 8px; color: #ffd76a; display: flex; justify-content: space-between; border-top: 1px dashed #3c1e45; padding-top: 6px; }
+
+.lb-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8px; }
+.lb-table th { color: #ffb35c; padding: 6px 4px; border-bottom: 1px solid #87513e; text-align: left; }
+.lb-table td { padding: 8px 4px; border-bottom: 1px solid #2a1530; text-align: left; color: #ffe9b0; }
+.lb-table tr:first-child td { color: #ffd76a; font-weight: bold; }
+.lb-rank { width: 22px; color: #ffb35c !important; }
+
+.logo-wrap{
+  width:72px;height:72px;margin:0 auto 10px;border-radius:50%;
+  border:3px solid #e8a84a;box-shadow:0 0 0 2px #5c2e1a,0 4px 12px rgba(0,0,0,.45);
+  overflow:hidden;background:#2a1530;
+}
+.logo-wrap img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  image-rendering:pixelated;
+}
+
+.btn-group { display: flex; gap: 10px; margin-top: 14px; }
+button{
+  font-family: 'Press Start 2P', monospace;
+  padding:10px 16px;background:#713b32;color:#fff0bd;
+  border:2px solid #d18a4d;border-radius:8px;
+  font-size:11px;cursor:pointer; transition: transform 0.1s;
+}
+button:hover{background:#8a4a3e; transform: scale(1.02);}
+button.secondary { background: #2a1530; border-color: #87513e; color: #ffe9b0; }
+button.secondary:hover { background: #3a1e42; }
+
+#muteBtn{
+  position:absolute;z-index:20;bottom:14px;right:14px;
+  background:#17101dee;border:2px solid #87513e;border-radius:8px;
+  padding:8px 10px;font-size:9px;cursor:pointer;color:#ffe9b0;
+  font-family: 'Press Start 2P', monospace;
+}
+#muteBtn:hover{background:#2a1a30}
+
+#noticeBox {
+  position: absolute; top: 12px; right: 12px; z-index: 100;
+  background: #3c1e45; border: 2px solid #ffb35c; color: #ffe9b0;
+  padding: 10px 14px; border-radius: 8px; font-size: 8px; line-height: 1.5;
+  display: none; max-width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="preloader">
+    <div class="card" style="max-width:340px;">
+      <div class="logo-wrap"><img src="coin.gif" alt="Loading"></div>
+      <h1 style="font-size:13px; margin-bottom:12px; color:#ffb35c;">LOADING ASSETS</h1>
+      <div class="loader-bar-bg">
+        <div id="loaderFill"></div>
+      </div>
+      <div id="loaderPercent" style="margin-top:10px; font-size:9px; color:#ffe9b0;">0%</div>
+      <div id="loaderStatus" style="margin-top:6px; font-size:7px; color:#a38173;">Loading game resources...</div>
+    </div>
+  </div>
+
+  <div id="noticeBox"></div>
+  <div id="hud">
+    <small>Distance <span id="score">0</span> m</small>
+    <small id="coinsHud">Coins <span id="coins">0</span></small>
+    <small id="speedHud">Speed <span id="speed">0</span> km/h</small>
+  </div>
+  <button id="muteBtn" type="button" title="Toggle sound">🔊 Sound</button>
+
+  <div id="start">
+    <div class="card">
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabGameBtn" onclick="switchTab('game')">🎮 Run</button>
+        <button class="tab-btn" id="tabLbBtn" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+        <button class="tab-btn" id="tabProfBtn" style="display:none;" onclick="switchTab('profile')">👤 Profile</button>
+      </div>
+
+      <div id="tabGame" class="tab-content active">
+        <div class="logo-wrap"><img src="coin.gif" alt="Walter"></div>
+        <h1>Walter Run</h1>
+        <p>Jump over rocks, grab coins!</p>
+        
+        <div class="controls-guide">
+          <b>Controls:</b><br>
+          Press <b>Space</b> / <b>↑</b> / <b>Tap</b> to Jump
+        </div>
+
+        <div class="wallet-box">
+          <div class="wallet-box-title">
+            <span>PLAYER ACCOUNT</span>
+            <span id="loginBadge" style="color:#a38173; font-size:7px;">GUEST</span>
+          </div>
+          <div id="walletLoggedOut">
+            <div class="wallet-btns">
+              <button class="btn-wallet" onclick="connectMetaMask(true)">🦊 MetaMask</button>
+              <button class="btn-wallet" onclick="connectPhantom(true)">👻 Phantom</button>
+            </div>
+          </div>
+          <div id="walletLoggedIn" style="display:none;">
+            <div class="user-status" id="userAddressText">0x...</div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+              <button class="btn-wallet" onclick="switchWalletAccount()" style="font-size:7px; padding:4px;">🔄 Switch Acc</button>
+              <button class="btn-wallet" onclick="disconnectWallet()" style="font-size:7px; padding:4px; border-color:#ff6b6b; color:#ff6b6b;">❌ Disconnect</button>
+            </div>
+            <div class="user-highscores">
+              <span>BEST DIST: <b id="userBestDist">0</b>m</span>
+              <span>BEST COINS: <b id="userBestCoins">0</b></span>
+            </div>
+          </div>
+        </div>
+
+        <button id="startBtn" style="width:100%; margin-top:8px;">Start Run</button>
+      </div>
+
+      <div id="tabLeaderboard" class="tab-content">
+        <h1>Leaderboard</h1>
+        <div class="lb-subtabs">
+          <button class="lb-subtab-btn active" id="lbWeeklyBtn" onclick="switchLbSubTab('weekly')">⚡ Weekly</button>
+          <button class="lb-subtab-btn" id="lbAllTimeBtn" onclick="switchLbSubTab('allTime')">👑 All Time</button>
+        </div>
+        <p id="lbSubtabNotice" style="font-size:7px; margin-bottom:10px; color:#ffb35c;">Top 10 Weekly Runners (Resets Sun Midnight)</p>
+        <div style="max-height:220px; overflow-y:auto;">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th class="lb-rank">#</th>
+                <th>PLAYER</th>
+                <th style="text-align:right;">DIST</th>
+                <th style="text-align:right;">COINS</th>
+              </tr>
+            </thead>
+            <tbody id="lbTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tabProfile" class="tab-content">
+        <h1>Profile</h1>
+        <div class="lb-subtabs" style="margin-bottom:12px;">
+          <button class="lb-subtab-btn active" id="profUserSubTabBtn" onclick="switchProfSubTab('user')">👤 User</button>
+          <button class="lb-subtab-btn" id="profRedeemSubTabBtn" onclick="switchProfSubTab('redeem')">🎁 Redeem Coins</button>
+        </div>
+
+        <!-- User Profile Subtab -->
+        <div id="profSubTabUser" class="prof-subtab-content">
+          <div style="text-align:left; background:#17101d; border:1px solid #87513e; border-radius:8px; padding:10px; margin-bottom:10px;">
+            <label style="font-size:7px; color:#ffb35c; display:block; margin-bottom:6px;">DISPLAY NAME:</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="profNameInput" maxlength="20" placeholder="Enter display name" 
+                style="flex:1; background:#2a1530; border:1px solid #c97945; color:#ffe9b0; border-radius:6px; padding:6px 8px; font-family:'Press Start 2P', monospace; font-size:8px; outline:none;" />
+              <button onclick="updateProfileName()" style="padding:6px 10px; font-size:8px; white-space:nowrap;">Save</button>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div style="background:#17101d; border:1px solid #87513e; border-radius:8px; padding:8px; text-align:center;">
+              <div style="font-size:7px; color:#a38173; margin-bottom:4px;">TOTAL DISTANCE</div>
+              <div style="font-size:9px; color:#6affd7;" id="profTotalDist">0 m</div>
+            </div>
+            <div style="background:#17101d; border:1px solid #87513e; border-radius:8px; padding:8px; text-align:center;">
+              <div style="font-size:7px; color:#a38173; margin-bottom:4px;">TOTAL COINS</div>
+              <div style="font-size:9px; color:#ffd76a;" id="profTotalCoins">0</div>
+            </div>
+          </div>
+
+          <div style="text-align:left;">
+            <div style="font-size:8px; color:#ffb35c; margin-bottom:6px;">LAST 5 RACES:</div>
+            <div style="max-height:130px; overflow-y:auto;">
+              <table class="lb-table" style="font-size:7px;">
+                <thead>
+                  <tr>
+                    <th>DATE</th>
+                    <th style="text-align:right;">DIST</th>
+                    <th style="text-align:right;">COINS</th>
+                  </tr>
+                </thead>
+                <tbody id="profRacesTableBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Redeem Coins Subtab -->
+        <div id="profSubTabRedeem" class="prof-subtab-content" style="display:none;">
+          <div id="skinStoreGrid" style="display: grid; grid-template-columns: 1fr; gap: 10px; margin: 10px 0;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOver">
+    <div class="card">
+      <div class="logo-wrap"><img src="coin.gif" alt="Walter"></div>
+      <h1 style="color:#ff6b6b;">Game Over</h1>
+      <p style="margin:12px 0; line-height:1.8;">
+        Distance: <span id="finalScore" style="color:#ffb35c;">0</span> m<br>
+        Coins: <span id="finalCoins" style="color:#ffd76a;">0</span>
+      </p>
+      <div id="newRecordBadge" style="display:none; color:#6affd7; font-size:9px; margin-bottom:10px;">
+        🎉 NEW HIGH SCORE!
+      </div>
+      <div class="btn-group">
+        <button class="secondary" id="goHomeBtn" style="flex:1;">🏠 Home</button>
+        <button id="restartBtn" style="flex:1.2;">🔄 Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.connectedAccount = null;
+window.connectedProvider = null;
+window.gameSecurityToken = null;
+window.userStats = { bestDist: 0, bestCoins: 0, totalDist: 0, totalCoins: 0, name: '', races: [], unlockedSkins: ['walkingwalter.gif'], activeSkin: 'walkingwalter.gif' };
+window.leaderboardData = { weekly: [], allTime: [] };
+window.activeLbSubTab = 'weekly';
+
+function showNotice(msg) {
+  const box = document.getElementById('noticeBox');
+  if (!box) return;
+  box.textContent = msg;
+  box.style.display = 'block';
+  setTimeout(() => { box.style.display = 'none'; }, 4000);
+}
+
+async function fetchLeaderboardPHP(account = '') {
+  try {
+    const localStats = localStorage.getItem('walter_userStats');
+    if (localStats) {
+      window.userStats = { ...window.userStats, ...JSON.parse(localStats) };
+    }
+    if (!window.userStats.unlockedSkins) window.userStats.unlockedSkins = ['walkingwalter.gif'];
+    if (!window.userStats.activeSkin) window.userStats.activeSkin = 'walkingwalter.gif';
+
+    window.leaderboardData = { weekly: [], allTime: [] };
+    renderLeaderboard();
+    if (account) {
+      updateConnectedAccountStats(window.userStats);
+    }
+  } catch (err) {
+    console.warn("Could not load scores:", err);
+  }
+}
+
+async function savePlayerScorePHP(account, dist, coins) {
+  try {
+    window.userStats.totalCoins += coins;
+    window.userStats.totalDist += dist;
+    if (dist > window.userStats.bestDist) window.userStats.bestDist = dist;
+    if (coins > window.userStats.bestCoins) window.userStats.bestCoins = coins;
+    
+    window.userStats.races.unshift({ dist, coins, timestamp: Math.floor(Date.now() / 1000) });
+    if (window.userStats.races.length > 5) window.userStats.races.pop();
+
+    localStorage.setItem('walter_userStats', JSON.stringify(window.userStats));
+    renderLeaderboard();
+    updateConnectedAccountStats(window.userStats);
+    
+    return {
+      newBestDist: window.userStats.bestDist,
+      userBestCoins: window.userStats.bestCoins
+    };
+  } catch (err) {
+    console.warn("Could not save score:", err);
+  }
+  return { newBestDist: dist, newBestCoins: coins };
+}
+
+const STORE_SKINS = [
+  { id: 'walkingwalter.gif', name: 'Default Walter', price: 0 },
+  { id: 'walter_army.png', name: 'Army Walter', price: 200 },
+  { id: 'walter_viking.png', name: 'Viking Walter', price: 500 },
+  { id: 'walter_king.png', name: 'King Walter', price: 1500 },
+  { id: 'walter_cowboy.gif', name: 'Cowboy Walter', price: 800 },
+  { id: 'walter_astro.png', name: 'Astro Walter', price: 1200 },
+  { id: 'walter_specops.gif', name: 'SpecOps Walter', price: 2000 },
+  { id: 'walter_desert.png', name: 'Desert Walter', price: 600 }
+];
+
+window.renderSkinStore = function() {
+  const container = document.getElementById('skinStoreGrid');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  STORE_SKINS.forEach(skin => {
+    const isOwned = window.userStats.unlockedSkins.includes(skin.id);
+    const isActive = window.userStats.activeSkin === skin.id;
+    const canAfford = window.userStats.totalCoins >= skin.price;
+    
+    let btnHtml = '';
+    if (isActive) {
+      btnHtml = `<button class="secondary" disabled style="width:100%; opacity:0.8;">Equipped</button>`;
+    } else if (isOwned) {
+      btnHtml = `<button onclick="purchaseSkin('${skin.id}', 0)" style="width:100%;">Equip</button>`;
+    } else {
+      btnHtml = `<button onclick="purchaseSkin('${skin.id}', ${skin.price})" style="width:100%; ${!canAfford ? 'opacity:0.5; cursor:not-allowed;' : ''}" ${!canAfford ? 'disabled' : ''}>Buy (${skin.price} Coins)</button>`;
+    }
+
+    container.innerHTML += `
+      <div style="background:#17101d; border:1px solid #87513e; border-radius:8px; padding:10px; display:flex; align-items:center; gap:10px;">
+        <img src="${skin.id}" style="width:40px; height:44px; image-rendering:pixelated;" alt="${skin.name}">
+        <div style="flex:1; text-align:left;">
+          <div style="font-size:9px; color:#ffe9b0; margin-bottom:4px;">${skin.name}</div>
+          <div style="font-size:7px; color:#ffd76a;">${skin.price > 0 ? skin.price + ' Coins' : 'Free'}</div>
+        </div>
+        <div style="width:100px;">
+          ${btnHtml}
+        </div>
+      </div>
+    `;
+  });
+};
+
+window.purchaseSkin = function(skinId, cost) {
+  if (!window.userStats.unlockedSkins.includes(skinId)) {
+    if (window.userStats.totalCoins >= cost) {
+      window.userStats.totalCoins -= cost;
+      window.userStats.unlockedSkins.push(skinId);
+      window.userStats.activeSkin = skinId;
+      localStorage.setItem('walter_userStats', JSON.stringify(window.userStats));
+      updateConnectedAccountStats(window.userStats);
+      if (typeof window.renderSkinStore === 'function') window.renderSkinStore();
+      showNotice("Skin Purchased & Equipped!");
+    } else {
+      showNotice("Not enough coins!");
+    }
+  } else {
+    window.userStats.activeSkin = skinId;
+    localStorage.setItem('walter_userStats', JSON.stringify(window.userStats));
+    if (typeof window.renderSkinStore === 'function') window.renderSkinStore();
+    showNotice("Skin Equipped!");
+  }
+};
+
+async function updateProfileName() {
+  if (!window.connectedAccount) {
+    showNotice("Please connect wallet first.");
+    return;
+  }
+  const nameInput = document.getElementById('profNameInput');
+  if (!nameInput) return;
+  const newName = nameInput.value.trim();
+  if (!newName) {
+    showNotice("Please enter a valid display name.");
+    return;
+  }
+
+  try {
+    const res = await fetch('api.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Game-Token': window.gameSecurityToken || ''
+      },
+      body: JSON.stringify({
+        address: window.connectedAccount,
+        name: newName,
+        action: 'update_name',
+        token: window.gameSecurityToken || ''
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showNotice("Name updated successfully!");
+      if (data.userProfile) {
+        updateConnectedAccountStats(data.userProfile);
+      }
+      if (data.weekly || data.allTime) {
+        window.leaderboardData = {
+          weekly: data.weekly || [],
+          allTime: data.allTime || []
+        };
+        renderLeaderboard();
+      }
+    } else {
+      showNotice(data.message || "Failed to update name.");
+    }
+  } catch (err) {
+    showNotice("Error updating name.");
+  }
+}
+
+function switchTab(tab) {
+  document.getElementById('tabGameBtn').classList.toggle('active', tab === 'game');
+  document.getElementById('tabLbBtn').classList.toggle('active', tab === 'leaderboard');
+  const profBtn = document.getElementById('tabProfBtn');
+  if (profBtn) profBtn.classList.toggle('active', tab === 'profile');
+
+  document.getElementById('tabGame').classList.toggle('active', tab === 'game');
+  document.getElementById('tabLeaderboard').classList.toggle('active', tab === 'leaderboard');
+  const profTab = document.getElementById('tabProfile');
+  if (profTab) profTab.classList.toggle('active', tab === 'profile');
+
+  if (tab === 'leaderboard') {
+    renderLeaderboard();
+  } else if (tab === 'profile' && window.connectedAccount) {
+    fetchLeaderboardPHP(window.connectedAccount);
+  }
+}
+
+function switchProfSubTab(subTab) {
+  document.getElementById('profUserSubTabBtn').classList.toggle('active', subTab === 'user');
+  document.getElementById('profRedeemSubTabBtn').classList.toggle('active', subTab === 'redeem');
+  document.getElementById('profSubTabUser').style.display = subTab === 'user' ? 'block' : 'none';
+  document.getElementById('profSubTabRedeem').style.display = subTab === 'redeem' ? 'block' : 'none';
+  if (subTab === 'redeem' && typeof window.renderSkinStore === 'function') window.renderSkinStore();
+}
+
+function switchLbSubTab(type) {
+  window.activeLbSubTab = type;
+  document.getElementById('lbWeeklyBtn').classList.toggle('active', type === 'weekly');
+  document.getElementById('lbAllTimeBtn').classList.toggle('active', type === 'allTime');
+  
+  const notice = document.getElementById('lbSubtabNotice');
+  if (notice) {
+    notice.textContent = type === 'weekly' 
+      ? 'Top 10 Weekly Runners (Resets Sun Midnight)' 
+      : 'Top 10 All-Time Highest Runners';
+  }
+  
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const tbody = document.getElementById('lbTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const list = window.activeLbSubTab === 'weekly' 
+    ? (window.leaderboardData.weekly || []) 
+    : (window.leaderboardData.allTime || []);
+
+  if (!list || list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align:center; padding:18px 8px; color:#a38173; font-size:8px; line-height:1.6;">
+          NO SCORES YET<br><span style="font-size:7px; color:#ffe9b0;">Play a run to save to scores.json!</span>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  list.slice(0, 10).forEach((item, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="lb-rank">${idx + 1}</td>
+      <td>${item.name || item.address}</td>
+      <td style="text-align:right;">${item.dist}m</td>
+      <td style="text-align:right;">${item.coins}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderLastRaces(races) {
+  const tbody = document.getElementById('profRacesTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (!races || races.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" style="text-align:center; padding:12px; color:#a38173; font-size:7px;">
+          No races recorded yet. Play a run!
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  races.slice(0, 5).forEach((race) => {
+    const d = race.timestamp ? new Date(race.timestamp * 1000) : new Date();
+    const timeStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + 
+                    d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#ffe9b0;">${timeStr}</td>
+      <td style="text-align:right; color:#6affd7;">${race.dist}m</td>
+      <td style="text-align:right; color:#ffd76a;">${race.coins}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateConnectedAccountStats(userProfile) {
+  if (!window.connectedAccount) return;
+
+  if (userProfile) {
+    window.userStats.bestDist = userProfile.bestDist || 0;
+    window.userStats.bestCoins = userProfile.bestCoins || 0;
+    window.userStats.totalDist = userProfile.totalDist || 0;
+    window.userStats.totalCoins = userProfile.totalCoins || 0;
+    window.userStats.name = userProfile.name || '';
+    window.userStats.races = userProfile.races || [];
+  } else {
+    const allList = window.leaderboardData.allTime || [];
+    const ex = allList.find(p => p.address && p.address.toLowerCase() === window.connectedAccount.toLowerCase());
+    if (ex) {
+      window.userStats.bestDist = Math.max(window.userStats.bestDist || 0, ex.dist);
+      window.userStats.bestCoins = Math.max(window.userStats.bestCoins || 0, ex.coins);
+    }
+  }
+
+  // Update Player Account HUD Badge
+  document.getElementById('userBestDist').textContent = window.userStats.bestDist;
+  document.getElementById('userBestCoins').textContent = window.userStats.bestCoins;
+
+  // Update Profile Tab Elements
+  const nameInput = document.getElementById('profNameInput');
+  if (nameInput && window.userStats.name) {
+    nameInput.value = window.userStats.name;
+  }
+  
+  const totalDistEl = document.getElementById('profTotalDist');
+  if (totalDistEl) totalDistEl.textContent = (window.userStats.totalDist || 0) + ' m';
+
+  const totalCoinsEl = document.getElementById('profTotalCoins');
+  if (totalCoinsEl) totalCoinsEl.textContent = window.userStats.totalCoins || 0;
+
+  renderLastRaces(window.userStats.races || []);
+  if (typeof window.renderSkinStore === 'function') window.renderSkinStore();
+}
+
+function getMetaMaskProvider() {
+  if (typeof window.ethereum === 'undefined') return null;
+  if (Array.isArray(window.ethereum.providers)) {
+    return window.ethereum.providers.find(p => p.isMetaMask) || null;
+  }
+  return window.ethereum.isMetaMask ? window.ethereum : null;
+}
+
+function getPhantomProvider() {
+  if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+  if (window.solana?.isPhantom) return window.solana;
+  return null;
+}
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+async function connectMetaMask(forceSelect = false) {
+  const provider = getMetaMaskProvider();
+  if (!provider) {
+    if (isMobileDevice()) {
+      showNotice("Opening MetaMask app...");
+      const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+      window.location.href = "https://metamask.app.link/dapp/" + dappUrl;
+      return;
+    }
+    showNotice("MetaMask extension not found! Please install MetaMask.");
+    return;
+  }
+
+  try {
+    if (forceSelect) {
+      try {
+        await provider.request({
+          method: 'wallet_requestPermissions',
+          params: [{ eth_accounts: {} }]
+        });
+      } catch (pErr) {
+        if (pErr.code === 4001) {
+          showNotice("Account selection prompt canceled.");
+          return;
+        }
+      }
+    }
+    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+    if (accounts && accounts.length > 0) {
+      setConnectedAccount(accounts[0], 'METAMASK');
+    }
+  } catch(e) {
+    if (e.code === 4001) {
+      showNotice("MetaMask connection request rejected.");
+    } else {
+      showNotice("MetaMask error: " + (e.message || "Failed to connect"));
+    }
+  }
+}
+
+async function connectPhantom(forceSelect = false) {
+  const provider = getPhantomProvider();
+  if (!provider) {
+    if (isMobileDevice()) {
+      showNotice("Opening Phantom app...");
+      const url = encodeURIComponent(window.location.href);
+      window.location.href = "https://phantom.app/ul/browse/" + url + "?ref=" + url;
+      return;
+    }
+    showNotice("Phantom Solana wallet extension not found!");
+    return;
+  }
+
+  try {
+    if (forceSelect && typeof provider.disconnect === 'function') {
+      await provider.disconnect();
+    }
+    const resp = await provider.connect({ onlyIfTrusted: false });
+    if (resp && resp.publicKey) {
+      setConnectedAccount(resp.publicKey.toString(), 'PHANTOM');
+    }
+  } catch(e) {
+    showNotice("Phantom connection canceled.");
+  }
+}
+
+function switchWalletAccount() {
+  if (window.connectedProvider === 'METAMASK') {
+    connectMetaMask(true);
+  } else if (window.connectedProvider === 'PHANTOM') {
+    connectPhantom(true);
+  }
+}
+
+function disconnectWallet() {
+  window.connectedAccount = null;
+  window.connectedProvider = null;
+  window.userStats = { bestDist: 0, bestCoins: 0, totalDist: 0, totalCoins: 0, name: '', races: [], unlockedSkins: ['walkingwalter.gif'], activeSkin: 'walkingwalter.gif' };
+  localStorage.removeItem('walter_wallet_provider');
+  
+  document.getElementById('walletLoggedOut').style.display = 'block';
+  document.getElementById('walletLoggedIn').style.display = 'none';
+  document.getElementById('loginBadge').textContent = 'GUEST';
+  document.getElementById('loginBadge').style.color = '#a38173';
+  
+  // Hide Profile Tab
+  const profBtn = document.getElementById('tabProfBtn');
+  if (profBtn) profBtn.style.display = 'none';
+  switchTab('game');
+
+  showNotice("Wallet disconnected.");
+}
+
+function setConnectedAccount(account, providerName) {
+  window.connectedAccount = account;
+  window.connectedProvider = providerName;
+  localStorage.setItem('walter_wallet_provider', providerName);
+  document.getElementById('walletLoggedOut').style.display = 'none';
+  document.getElementById('walletLoggedIn').style.display = 'block';
+  document.getElementById('loginBadge').textContent = providerName;
+  document.getElementById('loginBadge').style.color = '#6affd7';
+  document.getElementById('userAddressText').textContent = account.length > 16 ? account.substring(0,8) + '...' + account.slice(-6) : account;
+  
+  // Show Profile Tab for logged in user
+  const profBtn = document.getElementById('tabProfBtn');
+  if (profBtn) profBtn.style.display = 'flex';
+
+  fetchLeaderboardPHP(account);
+  setupWalletEventListeners();
+  showNotice(`Connected: ${providerName}`);
+}
+
+function setupWalletEventListeners() {
+  const mmProvider = getMetaMaskProvider();
+  if (mmProvider && mmProvider.on && !mmProvider._hasWalterListeners) {
+    mmProvider._hasWalterListeners = true;
+    mmProvider.on('accountsChanged', (accounts) => {
+      if (accounts && accounts.length > 0 && window.connectedProvider === 'METAMASK') {
+        setConnectedAccount(accounts[0], 'METAMASK');
+      } else if (window.connectedProvider === 'METAMASK') {
+        disconnectWallet();
+      }
+    });
+  }
+
+  const phProvider = getPhantomProvider();
+  if (phProvider && phProvider.on && !phProvider._hasWalterListeners) {
+    phProvider._hasWalterListeners = true;
+    phProvider.on('accountChanged', (publicKey) => {
+      if (publicKey && window.connectedProvider === 'PHANTOM') {
+        setConnectedAccount(publicKey.toString(), 'PHANTOM');
+      } else if (window.connectedProvider === 'PHANTOM') {
+        disconnectWallet();
+      }
+    });
+  }
+}
+
+const savedProvider = localStorage.getItem('walter_wallet_provider');
+if (savedProvider === 'METAMASK') {
+  connectMetaMask(false);
+} else if (savedProvider === 'PHANTOM') {
+  connectPhantom(false);
+}
+</script>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  const scoreEl = document.getElementById('score');
+  const coinsEl = document.getElementById('coins');
+  const speedEl = document.getElementById('speed');
+  const startScreen = document.getElementById('start');
+  const overScreen = document.getElementById('gameOver');
+  const finalScoreEl = document.getElementById('finalScore');
+  const finalCoinsEl = document.getElementById('finalCoins');
+  const newRecordBadge = document.getElementById('newRecordBadge');
+
+  const loadedAssets = {};
+
+  const ASSETS_TO_PRELOAD = [
+    'walkingwalter.gif',
+    'walter_army.png',
+    'walter_viking.png',
+    'walter_king.png',
+    'walter_cowboy.gif',
+    'walter_astro.png',
+    'walter_specops.gif',
+    'walter_desert.png',
+    'coin.gif',
+    'coin_static.png',
+    'terrain.png',
+    'rock_1.png',
+    'rock_2.png',
+    'rock_3.png',
+    'rock_4.png'
+  ];
+
+  window.terrainTileWidth = 1000;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.imageSmoothingEnabled = false;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function preloadAssets(onComplete) {
+    let loaded = 0;
+    const total = ASSETS_TO_PRELOAD.length;
+    const fill = document.getElementById('loaderFill');
+    const percent = document.getElementById('loaderPercent');
+    const status = document.getElementById('loaderStatus');
+    const preloader = document.getElementById('preloader');
+
+    if (total === 0) {
+      if (preloader) preloader.style.display = 'none';
+      onComplete();
+      return;
+    }
+
+    function step() {
+      loaded++;
+      const pct = Math.min(100, Math.floor((loaded / total) * 100));
+      if (fill) fill.style.width = pct + '%';
+      if (percent) percent.textContent = pct + '%';
+      if (status) status.textContent = `Loaded ${loaded} / ${total} assets`;
+
+      if (loaded >= total) {
+        setTimeout(() => {
+          if (preloader) {
+            preloader.style.opacity = '0';
+            preloader.style.transition = 'opacity 0.35s ease';
+            setTimeout(() => { preloader.style.display = 'none'; }, 350);
+          }
+          onComplete();
+        }, 180);
+      }
+    }
+
+    ASSETS_TO_PRELOAD.forEach(src => {
+      const img = new Image();
+      img.onload = () => {
+        loadedAssets[src] = img;
+        if (src === 'terrain.png' && img.naturalHeight > 0) {
+          const trackH = 460;
+          const tileW = Math.max(200, Math.round(img.naturalWidth * (trackH / img.naturalHeight)) || 1000);
+          window.terrainTileWidth = tileW;
+        }
+        step();
+      };
+      img.onerror = step;
+      img.src = src;
+    });
+
+    setTimeout(() => {
+      if (preloader && preloader.style.display !== 'none') {
+        preloader.style.display = 'none';
+        onComplete();
+      }
+    }, 4500);
+  }
+
+  const ROCK_SRCS = ['rock_1.png','rock_2.png','rock_3.png','rock_4.png'];
+  const rocks = [];
+  const coins = [];
+  const speedBoosts = [];
+  const mysteryBoxes = [];
+  const floatingTexts = [];
+  let jumpTimestamps = [];
+  let speedBoostEndTime = 0;
+  let invincibleEndTime = 0;
+  let speedTrail = [];
+
+  let running = false;
+  let last = 0;
+  let accumulator = 0;
+  const FIXED_DT = 1 / 60; // 60 FPS physics
+
+  let worldX = 0;
+  let speed = 270;
+  let y = 0;
+  let vy = 0;
+  let dist = 0;
+  let coinCount = 0;
+  let nextRockAt = 650;
+  let nextCoinAt = 400;
+
+  let lastDisplayedScore = -1;
+  let lastDisplayedSpeed = -1;
+
+  const GRAVITY = 2300;
+  const JUMP = 820;
+  const BASE_SPEED = 270;
+  const MAX_SPEED = 600;
+  const PLAYER_W = 75;
+  const PLAYER_H = 100;
+
+  let audioCtx = null;
+  let masterGain = null;
+  let musicGain = null;
+  let sfxGain = null;
+  let muted = false;
+  let musicNodes = [];
+  let musicTimer = null;
+
+  function ensureAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.55;
+    masterGain.connect(audioCtx.destination);
+    musicGain = audioCtx.createGain();
+    musicGain.gain.value = 0.22;
+    musicGain.connect(masterGain);
+    sfxGain = audioCtx.createGain();
+    sfxGain.gain.value = 0.7;
+    sfxGain.connect(masterGain);
+  }
+
+  function resumeAudio() {
+    ensureAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function setMuted(m) {
+    muted = m;
+    if (masterGain) masterGain.gain.value = muted ? 0 : 0.55;
+    document.getElementById('muteBtn').textContent = muted ? '🔇 Muted' : '🔊 Sound';
+  }
+
+  function noiseBuffer(dur) {
+    const len = Math.floor(audioCtx.sampleRate * dur);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  function playJump() {
+    if (muted || !audioCtx) return;
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(280, t);
+    o.frequency.exponentialRampToValueAtTime(620, t + 0.12);
+    g.gain.setValueAtTime(0.28, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    o.connect(g); g.connect(sfxGain);
+    o.start(t); o.stop(t + 0.2);
+  }
+
+  function playCoin() {
+    if (muted || !audioCtx) return;
+    const t = audioCtx.currentTime;
+    [880, 1175].forEach((freq, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0, t + i * 0.06);
+      g.gain.linearRampToValueAtTime(0.22, t + i * 0.06 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.06 + 0.16);
+      o.connect(g); g.connect(sfxGain);
+      o.start(t + i * 0.06); o.stop(t + i * 0.06 + 0.18);
+    });
+  }
+
+  function playCrash() {
+    if (muted || !audioCtx) return;
+    const t = audioCtx.currentTime;
+    const src = audioCtx.createBufferSource();
+    src.buffer = noiseBuffer(0.35);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(900, t);
+    filter.frequency.exponentialRampToValueAtTime(120, t + 0.3);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.45, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    src.connect(filter); filter.connect(g); g.connect(sfxGain);
+    src.start(t); src.stop(t + 0.4);
+
+    const o = audioCtx.createOscillator();
+    const g2 = audioCtx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(90, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.25);
+    g2.gain.setValueAtTime(0.5, t);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    o.connect(g2); g2.connect(sfxGain);
+    o.start(t); o.stop(t + 0.32);
+  }
+
+  const CHORDS = [
+    [220.00, 261.63, 329.63], [174.61, 220.00, 261.63],
+    [196.00, 246.94, 293.66], [164.81, 196.00, 246.94]
+  ];
+  let chordIdx = 0;
+  const BAR_SEC = 3.4;
+
+  function stopMusic() {
+    if (musicTimer) { clearTimeout(musicTimer); musicTimer = null; }
+    musicNodes.forEach(n => { try { n.stop(); } catch (_) {} });
+    musicNodes = [];
+  }
+
+  function playPadChord(freqs, start, dur) {
+    freqs.forEach((f, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+      o.type = i === 0 ? 'sine' : 'triangle';
+      o.frequency.value = f;
+      filter.type = 'lowpass'; filter.frequency.value = 1100;
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.linearRampToValueAtTime(0.05 - i * 0.007, start + 0.45);
+      g.gain.setValueAtTime(0.05 - i * 0.007, start + dur - 0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      o.connect(filter); filter.connect(g); g.connect(musicGain);
+      o.start(start); o.stop(start + dur + 0.05);
+      musicNodes.push(o);
+    });
+  }
+
+  function scheduleBar() {
+    if (!audioCtx || muted || !running) return;
+    const t0 = audioCtx.currentTime + 0.04;
+    const chord = CHORDS[chordIdx % CHORDS.length];
+    chordIdx++;
+    playPadChord(chord, t0, BAR_SEC * 0.97);
+    musicTimer = setTimeout(scheduleBar, BAR_SEC * 1000);
+  }
+
+  function startMusic() {
+    stopMusic();
+    chordIdx = 0;
+    if (!muted) {
+      if (musicGain) musicGain.gain.value = 0.30;
+      scheduleBar();
+    }
+  }
+
+  const starsData = [];
+  for (let i = 0; i < 40; i++) {
+    starsData.push({
+      x: Math.random(),
+      y: Math.random() * 0.7,
+      size: 1 + Math.random() * 2.4,
+      opacity: 0.3 + Math.random() * 0.6
+    });
+  }
+
+  function groundY() { return 245; }
+  function playerCenterX() { return canvas.width * 0.22; }
+
+  function makeRock(x) {
+    if (rocks.length >= 14) return;
+    const src = ROCK_SRCS[Math.floor(Math.random() * ROCK_SRCS.length)];
+    const scale = 0.68 + Math.random() * 0.24;
+    const w = 110 * scale;
+    const h = 115 * scale;
+    rocks.push({ x, src, w, h });
+  }
+
+  function makeCoin(x, air = true) {
+    if (coins.length >= 8) return;
+    const size = 44;
+    const heightOff = air ? (75 + Math.random() * 85) : 18;
+    coins.push({ x, w: size, h: size, heightOff, taken: false });
+  }
+
+  function makeSpeedBoost(x) {
+    if (speedBoosts.length >= 2) return;
+    speedBoosts.push({ x, w: 40, h: 40, heightOff: 50, taken: false });
+  }
+
+  function makeMysteryBox(x) {
+    if (mysteryBoxes.length >= 2) return;
+    mysteryBoxes.push({ x, w: 44, h: 44, heightOff: 60, taken: false });
+  }
+
+  function clearEntities() {
+    rocks.length = 0;
+    coins.length = 0;
+    speedBoosts.length = 0;
+    mysteryBoxes.length = 0;
+    floatingTexts.length = 0;
+    speedTrail.length = 0;
+  }
+
+  function updateHUD() {
+    const curScore = Math.floor(dist);
+    const curSpeed = Math.round(speed / 10);
+    if (curScore !== lastDisplayedScore) {
+      scoreEl.textContent = curScore;
+      lastDisplayedScore = curScore;
+    }
+    if (curSpeed !== lastDisplayedSpeed) {
+      speedEl.textContent = curSpeed;
+      lastDisplayedSpeed = curSpeed;
+    }
+  }
+
+  function spawnAhead() {
+    const ahead = worldX + canvas.width + 700;
+    while (nextRockAt < ahead && rocks.length < 12) {
+      makeRock(nextRockAt);
+      if (speed >= 450 && Math.random() < 0.35) {
+        const doubleOffset = 30 + Math.random() * 12;
+        makeRock(nextRockAt + doubleOffset);
+        nextRockAt += doubleOffset;
+      }
+      nextRockAt += 520 + Math.random() * 380 + Math.min(180, dist / 8);
+    }
+    while (nextCoinAt < ahead && coins.length < 8) {
+      makeCoin(nextCoinAt, Math.random() > 0.3);
+      if (Math.random() < 0.05) {
+        if (Math.random() < 0.5) makeSpeedBoost(nextCoinAt + 150);
+        else makeMysteryBox(nextCoinAt + 150);
+      }
+      nextCoinAt += 340 + Math.random() * 360;
+    }
+  }
+
+  function recycle() {
+    const cx = playerCenterX();
+    for (let i = rocks.length - 1; i >= 0; i--) {
+      if (cx + rocks[i].x - worldX < -180) {
+        rocks.splice(i, 1);
+      }
+    }
+    for (let i = coins.length - 1; i >= 0; i--) {
+      if (coins[i].taken || cx + coins[i].x - worldX < -120) {
+        coins.splice(i, 1);
+      }
+    }
+    for (let i = speedBoosts.length - 1; i >= 0; i--) {
+      if (speedBoosts[i].taken || cx + speedBoosts[i].x - worldX < -120) {
+        speedBoosts.splice(i, 1);
+      }
+    }
+    for (let i = mysteryBoxes.length - 1; i >= 0; i--) {
+      if (mysteryBoxes[i].taken || cx + mysteryBoxes[i].x - worldX < -120) {
+        mysteryBoxes.splice(i, 1);
+      }
+    }
+  }
+
+  const particles = [];
+  function jump() {
+    if (running && y === 0) {
+      vy = JUMP; y = 0.1; playJump();
+      jumpTimestamps.push(performance.now());
+      const groundScreenY = canvas.height - groundY();
+      for(let i=0; i<15; i++) {
+        particles.push({
+          x: playerCenterX(),
+          y: groundScreenY,
+          vx: (Math.random() - 0.5) * 200,
+          vy: -(Math.random() * 150 + 50),
+          size: Math.random() * 5 + 3,
+          life: 1.0
+        });
+      }
+    }
+  }
+
+  function startGame() {
+    resumeAudio();
+    running = true;
+    last = performance.now();
+    accumulator = 0;
+    worldX = 0; speed = BASE_SPEED; y = 0; vy = 0;
+    dist = 0; coinCount = 0; nextRockAt = 700; nextCoinAt = 450;
+    lastDisplayedScore = -1; lastDisplayedSpeed = -1;
+    speedBoostEndTime = 0; invincibleEndTime = 0; jumpTimestamps = [];
+    clearEntities();
+    startScreen.style.display = 'none';
+    overScreen.style.display = 'none';
+    coinsEl.textContent = '0'; scoreEl.textContent = '0';
+    speedEl.textContent = Math.round(BASE_SPEED / 10);
+    spawnAhead(); render(performance.now()); startMusic();
+    requestAnimationFrame(loop);
+  }
+
+  async function crash() {
+    running = false;
+    playCrash(); stopMusic();
+
+    const finalDist = Math.floor(dist);
+    finalScoreEl.textContent = finalDist;
+    finalCoinsEl.textContent = coinCount;
+
+    try {
+      const payloadObj = { dist: finalDist, coins: coinCount, jumps: jumpTimestamps, account: window.connectedAccount || null };
+      const payloadStr = JSON.stringify(payloadObj);
+      const encoder = new TextEncoder();
+      const data = encoder.encode(payloadStr);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      localStorage.setItem('pendingLeaderboardPayload', JSON.stringify({ payload: payloadStr, hash: hashHex }));
+    } catch (e) {
+      console.warn("Anti-cheat hashing failed", e);
+    }
+
+    let isNewRecord = false;
+    const account = window.connectedAccount || ("Guest_" + Math.floor(1000 + Math.random() * 9000));
+    
+    const res = await savePlayerScorePHP(account, finalDist, coinCount);
+    if (res && finalDist >= res.newBestDist && finalDist > 0) {
+      isNewRecord = true;
+    }
+
+    newRecordBadge.style.display = isNewRecord ? 'block' : 'none';
+    overScreen.style.display = 'grid';
+  }
+
+  function goHome() {
+    overScreen.style.display = 'none';
+    startScreen.style.display = 'grid';
+    switchTab('game');
+    if (window.connectedAccount) {
+      fetchLeaderboardPHP(window.connectedAccount);
+    }
+  }
+
+  function collide() {
+    const g = groundY();
+    const px = playerCenterX();
+    const pL = px - PLAYER_W * 0.32;
+    const pR = px + PLAYER_W * 0.32;
+    const pB = g + y;
+    const pT = pB + PLAYER_H * 0.85;
+
+    const isInvincible = performance.now() < invincibleEndTime;
+
+    for (const r of rocks) {
+      const sx = px + r.x - worldX;
+      const l = sx - r.w * 0.38;
+      const rr = sx + r.w * 0.38;
+      const top = g + r.h * 0.78;
+      if (pR > l && pL < rr && pB < top && pT > g + 4) {
+        if (y < r.h * 0.58) {
+          if (!isInvincible) { crash(); return; }
+        }
+      }
+    }
+
+    for (const c of coins) {
+      if (c.taken) continue;
+      const sx = px + c.x - worldX;
+      const cy = g + c.heightOff + c.h * 0.5;
+      const dx = Math.abs(px - sx);
+      const dy = Math.abs((pB + (pT - pB) / 2) - cy);
+      if (dx < 45 && dy < 50) {
+        c.taken = true;
+        coinCount += 1;
+        coinsEl.textContent = coinCount;
+        dist += 15;
+        playCoin();
+      }
+    }
+
+    for (const sb of speedBoosts) {
+      if (sb.taken) continue;
+      const sx = px + sb.x - worldX;
+      const cy = g + sb.heightOff + sb.h * 0.5;
+      const dx = Math.abs(px - sx);
+      const dy = Math.abs((pB + (pT - pB) / 2) - cy);
+      if (dx < 45 && dy < 50) {
+        sb.taken = true;
+        speedBoostEndTime = performance.now() + 3000;
+        floatingTexts.push({ text: "SPEED BOOST!", x: px, y: pB - 80, life: 1.0 });
+        playCoin();
+      }
+    }
+
+    for (const mb of mysteryBoxes) {
+      if (mb.taken) continue;
+      const sx = px + mb.x - worldX;
+      const cy = g + mb.heightOff + mb.h * 0.5;
+      const dx = Math.abs(px - sx);
+      const dy = Math.abs((pB + (pT - pB) / 2) - cy);
+      if (dx < 45 && dy < 50) {
+        mb.taken = true;
+        const r = Math.random();
+        if (r < 0.33) {
+          coinCount += 50;
+          coinsEl.textContent = coinCount;
+          floatingTexts.push({ text: "+50 COINS!", x: px, y: pB - 80, life: 1.0 });
+        } else if (r < 0.66) {
+          invincibleEndTime = performance.now() + 4000;
+          floatingTexts.push({ text: "INVINCIBLE!", x: px, y: pB - 80, life: 1.0 });
+        } else {
+          speedBoostEndTime = performance.now() + 3000;
+          floatingTexts.push({ text: "SPEED BOOST!", x: px, y: pB - 80, life: 1.0 });
+        }
+        playCoin();
+      }
+    }
+  }
+
+  function updatePhysics(dt) {
+    let currentMax = MAX_SPEED;
+    let currentBase = BASE_SPEED;
+    if (performance.now() < speedBoostEndTime) {
+      currentMax *= 1.5;
+      currentBase *= 1.5;
+    }
+    speed = Math.min(currentMax, currentBase + Math.min(330, dist * 0.15));
+    worldX += speed * dt;
+    dist += (speed * dt) / 16;
+
+    if (y > 0 || vy > 0) {
+      y += vy * dt;
+      let currentGravity = GRAVITY;
+      if (Math.abs(vy) < 250) {
+        currentGravity = GRAVITY * 0.45;
+      } else if (vy < 0) {
+        currentGravity = GRAVITY * 1.3;
+      }
+      vy -= currentGravity * dt;
+      if (y <= 0) { 
+        y = 0; 
+        vy = 0; 
+        window.landTime = performance.now(); 
+      }
+    }
+
+    spawnAhead();
+    recycle();
+    collide();
+  }
+
+  function render(now) {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+    skyGrad.addColorStop(0, '#1a0f22');
+    skyGrad.addColorStop(0.4, '#2a1535');
+    skyGrad.addColorStop(1, '#17101d');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < starsData.length; i++) {
+      const s = starsData[i];
+      ctx.globalAlpha = s.opacity;
+      ctx.beginPath();
+      ctx.arc(s.x * w, s.y * h, s.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    const g = groundY();
+    const groundScreenY = h - g;
+    const cx = playerCenterX();
+
+    const terrainImg = loadedAssets['terrain.png'];
+    const trackH = 460;
+    const tileW = window.terrainTileWidth || 1000;
+    const offset = Math.round(worldX % tileW);
+
+    if (terrainImg) {
+      for (let tx = -offset; tx < w + tileW; tx += tileW) {
+        ctx.drawImage(terrainImg, tx, h - trackH, tileW, trackH);
+      }
+    }
+
+    for (let i = 0; i < rocks.length; i++) {
+      const r = rocks[i];
+      const rImg = loadedAssets[r.src];
+      if (rImg) {
+        const sx = Math.round(cx + r.x - worldX);
+        ctx.drawImage(rImg, sx - Math.round(r.w * 0.5), groundScreenY - r.h, r.w, r.h);
+      }
+    }
+
+    const coinImg = loadedAssets['coin.gif'] || loadedAssets['coin_static.png'];
+    for (let i = 0; i < coins.length; i++) {
+      const c = coins[i];
+      if (c.taken) continue;
+      const sx = Math.round(cx + c.x - worldX);
+      if (coinImg) {
+        ctx.drawImage(coinImg, sx - Math.round(c.w * 0.5), groundScreenY - c.heightOff - c.h, c.w, c.h);
+      }
+    }
+
+    for (let i = 0; i < speedBoosts.length; i++) {
+      const sb = speedBoosts[i];
+      if (sb.taken) continue;
+      const sx = Math.round(cx + sb.x - worldX);
+      ctx.fillStyle = '#00a8ff';
+      ctx.beginPath();
+      ctx.moveTo(sx, groundScreenY - sb.heightOff - sb.h);
+      ctx.lineTo(sx + sb.w / 2, groundScreenY - sb.heightOff - sb.h / 2);
+      ctx.lineTo(sx, groundScreenY - sb.heightOff);
+      ctx.fill();
+    }
+    
+    for (let i = 0; i < mysteryBoxes.length; i++) {
+      const mb = mysteryBoxes[i];
+      if (mb.taken) continue;
+      const sx = Math.round(cx + mb.x - worldX);
+      ctx.fillStyle = '#ff9f43';
+      ctx.shadowColor = '#feca57';
+      ctx.shadowBlur = 10;
+      ctx.fillRect(sx - mb.w/2, groundScreenY - mb.heightOff - mb.h, mb.w, mb.h);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff';
+      ctx.font = '24px "Press Start 2P"';
+      ctx.fillText('?', sx - Math.round(mb.w*0.3), groundScreenY - mb.heightOff - Math.round(mb.h*0.2));
+    }
+
+    const shadowPx = Math.round(cx);
+    const shadowPy = groundScreenY + 4;
+    const scaleShadow = (1 + y / 600);
+    ctx.fillStyle = 'rgba(0,0,0,' + (y > 10 ? 0.25 : 0.45) + ')';
+    ctx.beginPath();
+    ctx.ellipse(shadowPx, shadowPy, 35 * scaleShadow, 6 * scaleShadow, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx * 0.016;
+      p.y += p.vy * 0.016;
+      p.life -= 0.025;
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      } else {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = 'rgba(200, 200, 200, 0.7)';
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    }
+    ctx.globalAlpha = 1.0;
+
+    const walterImg = loadedAssets[window.userStats.activeSkin || 'walkingwalter.gif'];
+    const bob = (y === 0) ? Math.sin(now / 70) * 2.5 : 0;
+    const walterX = Math.round(cx - 50);
+    const walterY = Math.round(groundScreenY - y + 6 - bob - 110);
+
+    if (walterImg) {
+      ctx.save();
+      let scaleX = 1.0;
+      let scaleY = 1.0;
+
+      if (y > 0) {
+        let stretch = Math.min(0.25, Math.abs(vy) / JUMP * 0.25);
+        scaleX = 1.0 - stretch;
+        scaleY = 1.0 + stretch;
+      } else if (window.landTime && (now - window.landTime) < 150) {
+        scaleX = 1.2;
+        scaleY = 0.8;
+      }
+
+      if (now < speedBoostEndTime) {
+        speedTrail.push({ x: walterX, y: walterY, scaleX, scaleY });
+        if (speedTrail.length > 10) speedTrail.shift();
+        for (let i = 0; i < speedTrail.length; i += 2) {
+          let t = speedTrail[i];
+          ctx.save();
+          ctx.globalAlpha = 0.3 * (i / speedTrail.length);
+          ctx.translate(t.x + 50, t.y + 110);
+          ctx.scale(t.scaleX, t.scaleY);
+          ctx.translate(-(t.x + 50), -(t.y + 110));
+          ctx.drawImage(walterImg, t.x, t.y, 100, 110);
+          ctx.restore();
+        }
+      } else {
+        if (speedTrail.length > 0) speedTrail.shift();
+      }
+
+      if (now < invincibleEndTime) {
+        ctx.shadowColor = '#6affd7';
+        ctx.shadowBlur = 15;
+      }
+
+      ctx.translate(walterX + 50, walterY + 110);
+      ctx.scale(scaleX, scaleY);
+      ctx.translate(-(walterX + 50), -(walterY + 110));
+      
+      ctx.drawImage(walterImg, walterX, walterY, 100, 110);
+      ctx.restore();
+    }
+
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      let ft = floatingTexts[i];
+      ft.y -= 1.5;
+      ft.life -= 0.02;
+      if (ft.life <= 0) {
+        floatingTexts.splice(i, 1);
+      } else {
+        ctx.globalAlpha = Math.max(0, ft.life);
+        ctx.font = '12px "Press Start 2P", sans-serif';
+        ctx.fillStyle = '#6affd7';
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+      }
+    }
+    ctx.globalAlpha = 1.0;
+    ctx.textAlign = 'left';
+
+    updateHUD();
+  }
+
+  function loop(now) {
+    if (!running) return;
+    if (!last) last = now;
+    let frameTime = (now - last) / 1000;
+    last = now;
+
+    if (frameTime > 0.1) frameTime = 0.1;
+    accumulator += frameTime;
+
+    while (accumulator >= FIXED_DT) {
+      updatePhysics(FIXED_DT);
+      accumulator -= FIXED_DT;
+      if (!running) return;
+    }
+
+    render(now);
+    requestAnimationFrame(loop);
+  }
+
+  addEventListener('keydown', e => {
+    if (['ArrowUp',' '].includes(e.key)) e.preventDefault();
+    if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'W') {
+      jump();
+    }
+  });
+
+  document.getElementById('startBtn').onclick = startGame;
+  document.getElementById('restartBtn').onclick = startGame;
+  document.getElementById('goHomeBtn').onclick = goHome;
+
+  document.getElementById('muteBtn').onclick = () => {
+    resumeAudio();
+    setMuted(!muted);
+    if (muted) stopMusic();
+    else if (running) startMusic();
+  };
+
+  document.getElementById('game').addEventListener('pointerdown', e => {
+    if (e.target.closest('button') || e.target.closest('.card')) return;
+    if (!running) return;
+    jump();
+  });
+
+  preloadAssets(() => {
+    fetchLeaderboardPHP();
+  });
+})();
+</script>
+</body>
+</html>
